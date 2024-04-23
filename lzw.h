@@ -233,7 +233,7 @@ public:
 				return EOF;
 			}
 			if (code == decodeTable.size()) {
-				return -1;
+				return EOF;
 			}
 			entry = decodeTable.find(code);
 			prev += entry[0];
