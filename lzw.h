@@ -172,7 +172,6 @@ public:
 	int size() const { return count; }
 };
 
-
 class LZW : public cstream {
 	stroka str;
 	table table;
@@ -208,15 +207,13 @@ public:
 	}
 };
 
-
-
 class deLZW : public cstream {
 	stroka entry;
 	stroka prev;
-	table table;
+	table decodeTable;
 	bool is_eof;
 public:
-	deLZW(cstream* s, int bitscount = 12) :cstream(s), table(bitscount), iseof(false) {}
+	deLZW(cstream* s, int bitscount = 12) :cstream(s), decodeTable(bitscount), iseof(false) {}
 	bool is_open() { return prev->is_open(); }
 	int get() {
 		if (is_eof) {

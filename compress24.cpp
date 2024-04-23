@@ -54,6 +54,18 @@ int main(int argc, char* argv[]) {
 			cs = new LZW(cs, bits);
 			cs = new obitstream(cs, bits);
 		}
+		else if (strcmp(argv[i], "-delzw") == 0) {
+			int bits = 0;
+			if (i + 1 < argc - 2) {
+				bits = atoi(argv[i + 1]);
+				if (bits > 0) {
+					++i;
+				}
+			}
+			bits = (bits < 9) ? 9 : bits;
+			cs = new deLZW(cs, bits);
+		}
+
 	}
 
 	std::ofstream outFile(argv[argc-1], std::ios_base::binary);
