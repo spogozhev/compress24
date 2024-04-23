@@ -3,7 +3,7 @@
 #include <map>
 
 class stroka {
-	unsigned char *str;
+	unsigned char* str;
 	int count;
 	int maxsize;
 	void swap(stroka& other) {
@@ -79,57 +79,30 @@ public:
 		}
 		return (count < other.count);
 	}
+	int size()const {
+		return count;
+	}
+	unsigned char getfirst() {
+		if (count > 0) {
+			unsigned char res = str[0];
+			for (int i = 0; i < count - 1; ++i) {
+				str[i] = str[i + 1];
+			}
+			--count;
+		}
+		else throw"out of bounds";
+	}
 
 	friend std::ostream& operator<<(std::ostream& out, const stroka& s) {
 		for (int i = 0; i < s.count; ++i) {
 			if (s.str[i] <= 32)
-				out << (int)(s.str[i])<<" ";
-			else 
+				out << (int)(s.str[i]) << " ";
+			else
 				out << s.str[i];
 		}
 		return out;
 	}
 };
-/*
-class table {
-	int size;
-	int maxsize;
-	stroka* data;
-	table(const table&) {};
-public:
-	table(int bitscount) {
-		maxsize = (1 << bitscount);
-		data = new stroka[maxsize];
-		if (data) {
-			size = 256;
-			for (int i = 0; i < size; ++i) {
-				data[i] = stroka(i);
-			}
-		}
-		else throw "not enought memory";
-	}
-	~table() { delete[] data; }
-	void insert(const stroka& x) {
-		if (size < maxsize) {
-			data[size++] = x;
-		}
-	}
-	int find(const stroka& x) {
-		for (int i = 0; i < size; ++i) {
-			if (data[i] == x)
-				return i;
-		}
-		return -1;
-	}
-	void print() {
-		for (int i = 0; i < size && i<500; ++i) {
-			std::cout << i << "\t" << data[i] << std::endl;
-		}
-	}
-
-};
-*/
-
 
 class table {
 	int maxsize;
@@ -138,7 +111,7 @@ public:
 	table(int bitscount) {
 		maxsize = (1 << bitscount);
 		for (int i = 0; i < 256; ++i) {
-			data.insert( { stroka(i), i } );
+			data.insert({ stroka(i), i });
 		}
 	}
 	void insert(const stroka& x) {
@@ -154,8 +127,18 @@ public:
 		}
 		return -1;
 	}
+	const stroka& find(int x) {
+		for (auto i : data) {
+			if (i->second == x) {
+				return i->first;
+			}
+		}
+		throw "no str with this number";
+	}
+	int size()const { return data.size(); }
+
 	void print() {
-		for (int i = 0; i < data.size() && i<500; ++i) {
+		for (int i = 0; i < data.size() && i < 500; ++i) {
 			for (auto pos = data.begin(); pos != data.end(); ++pos) {
 				if (pos->second == i) {
 					std::cout << pos->second << "\t" << pos->first << std::endl;
@@ -188,53 +171,8 @@ public:
 	}
 	int size() const { return count; }
 };
-/*
-class LZW : public cstream {
-	stroka str;
-	table table;
-	int bits;
-	bitsbuf buf;
-	bool is_eof;
-public:
-	LZW(cstream* s, int bitscount=12) : cstream(s), bits(bitscount), table(bitscount), is_eof(false) {}
-	bool is_open() { return prev->is_open(); }
-	int get() {
-		int res = buf.get_byte();
-		if (res > -1) return res;
-		if (is_eof) {
-			// надо ещё отдавать остаток от bitsbuf
-			if (buf.size() > 0) {
-				return buf.get_byte();
-			} else {
-				return EOF; 
-			}
-		}
-		
-		do {
-			int ch = prev->get();
-			if (ch == EOF) {
-				is_eof = true;
-				res = table.find(str);
-				buf.push(res, bits);
-				return buf.get_byte();
-			}
-			stroka str_ch = str + ch;
-			res = table.find(str_ch);
-			if (res == -1) {
-				table.insert(str_ch);
-				res = table.find(str);
-				buf.push(res, bits);
-				str = stroka(ch);
-				return buf.get_byte();
-			}
-			else {
-				str += ch;
-			}
-		} while (res != -1);
-		return res;
-	}
-};
-*/
+
+
 class LZW : public cstream {
 	stroka str;
 	table table;
@@ -244,7 +182,7 @@ public:
 	bool is_open() { return prev->is_open(); }
 	int get() {
 		if (is_eof) {
-//			table.print();
+			//			table.print();
 			return EOF;
 		}
 		int res, ch;
@@ -258,13 +196,51 @@ public:
 			res = table.find(str_ch);
 			if (res == -1) {
 				table.insert(str_ch);
-			} else {
+			}
+			else {
 				str += ch;
 			}
 		} while (res != -1);
 
 		res = table.find(str);
 		str = stroka(ch);
+		return res;
+	}
+};
+
+
+
+class deLZW : public cstream {
+	stroka entry;
+	stroka prev;
+	table table;
+	bool is_eof;
+public:
+	deLZW(cstream* s, int bitscount = 12) :cstream(s), table(bitscount), iseof(false) {}
+	bool is_open() { return prev->is_open(); }
+	int get() {
+		if (is_eof) {
+			return EOF;
+		}
+		int res;
+		if (entry.size() > 0) {
+			res = entry.getfirst();
+		}
+		else {
+			int code = prev->get();
+			if (code == EOF) {
+				is_eof = true;
+				return EOF;
+			}
+			if (code == decodeTable.size()) {
+				return -1;
+			}
+			entry = decodeTable.find(code);
+			prev += entry[0];
+			decodeTable.insert(prev);
+			prev = entry;
+			res = static_cast<int>(entry.getfirst());
+		}
 		return res;
 	}
 };

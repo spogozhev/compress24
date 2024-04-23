@@ -83,6 +83,7 @@ public:
 		return 128 + (counter - 1);
 	}
 };
+ 
 
 class deRLE : public cstream {
 	int buf;
