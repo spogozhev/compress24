@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 			}
 			bits = (bits < 9) ? 9 : bits;
 			cs = new LZW(cs, bits);
-			cs = new toByte(cs, bits);
+			cs = new obitstream(cs, bits);
 		}
 	}
 
