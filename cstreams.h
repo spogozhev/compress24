@@ -5,3 +5,4 @@
 #include "mtf.h"
 #include "lzw.h"
 #include "obitstream.h"
+#include "lz77.h"

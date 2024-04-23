@@ -54,6 +54,9 @@ int main(int argc, char* argv[]) {
 			cs = new LZW(cs, bits);
 			cs = new obitstream(cs, bits);
 		}
+		else if (strcmp(argv[i], "-delz77") == 0) {
+			cs = new delz77(cs);
+		}
 	}
 
 	std::ofstream outFile(argv[argc-1], std::ios_base::binary);
