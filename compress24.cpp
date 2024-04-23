@@ -1,8 +1,7 @@
 ﻿#include <ctype.h>
 #include <iostream>
 #include <fstream>
-#include "cstream.h"
-#include "lzw.h"
+#include "cstreams.h"
 
 void help() {
 	std::cout << "Use \ncompress24 [-options] source_file_name destination_file_name\n";
@@ -44,8 +43,16 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "-derle") == 0)
 			cs = new deRLE(cs);
 		else if (strcmp(argv[i], "-lzw") == 0) {
-			cs = new LZW(cs, 12);
-			cs = new toByte(cs, 12);
+			int bits = 0;
+			if (i + 1 < argc - 2) {
+				bits = atoi(argv[i + 1]);
+				if (bits > 0) {
+					++i;
+				}
+			}
+			bits = (bits < 9) ? 9 : bits;
+			cs = new LZW(cs, bits);
+			cs = new toByte(cs, bits);
 		}
 	}
 
