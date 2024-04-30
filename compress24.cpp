@@ -54,6 +54,9 @@ int main(int argc, char* argv[]) {
 			cs = new LZW(cs, bits);
 			cs = new obitstream(cs, bits);
 		}
+		else if (strcmp(argv[i], "-lz77") == 0) {
+			cs = new lz77(cs);
+		}
 		else if (strcmp(argv[i], "-delz77") == 0) {
 			cs = new delz77(cs);
 		}
