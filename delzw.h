@@ -66,6 +66,14 @@ public:
 		}
 		return stroka();
 	}
+	bool is_in_table(const stroka& s) {
+		for (auto i : data){
+			if (i->second == s) {
+				return true;
+			}
+		}
+		return false;
+	}
 	int size()const { return static_cast<int>(data.size()); }
 	void print() {
 		for (int i = 0; i < data.size() && i < 500; ++i) {
@@ -96,20 +104,28 @@ public:
 		}
 		else {
 			int code = prev->get();
-			if (code == EOF) {
+			if (code == EOF || code > decodeTable.size()) {
 				is_eof = true;
 				return EOF;
 			}
-			if (code >= decodeTable.size()) {
-				return EOF;
+			if (code == decodeTable.size() && pr.size()>0) {
+				pr += pr[0];
+				if (!decodeTable.is_in_table()) {
+					decodeTable.insert(pr);
+				}
+				buf = pr;
 			}
-			stroka entry = decodeTable.find(code);
-			buf = entry;
-			if (pr.size() > 0) {
-				pr += entry[0];
-				decodeTable.insert(pr);
+			else {
+				stroka entry = decodeTable.find(code);
+				buf = entry;
+				if (pr.size() > 0) {
+					pr += entry[0];
+					if (!decodeTable.is_in_table()) {
+						decodeTable.insert(pr);
+					}
+				}
+				pr = entry;
 			}
-			pr = entry;
 			res = static_cast<int>(buf.pop_front());
 		}
 		return res;
