@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include "cstreams.h"
+#include <cstring>
 
 void help() {
 	std::cout << "Use \ncompress24 [-options] source_file_name destination_file_name\n";
