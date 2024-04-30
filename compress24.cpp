@@ -54,6 +54,10 @@ int main(int argc, char* argv[]) {
 			cs = new LZW(cs, bits);
 			cs = new obitstream(cs, bits);
 		}
+		else if (strcmp(argv[i], "-bwt") == 0)
+			cs = new BWT(cs);
+		else if (strcmp(argv[i], "-debwt") == 0)
+			cs = new deBWT(cs);
 	}
 
 	std::ofstream outFile(argv[argc-1], std::ios_base::binary);
