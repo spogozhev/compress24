@@ -3,35 +3,6 @@
 #include <string>
 #include <algorithm>
 #include "cstream.h"
-/*
-void quickSort(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end) {
-	if (begin >= end) {
-		return;
-	}
-	std::string pivot = *begin;
-	auto left = begin;
-	auto right = end;
-	while (left < right) {
-		while (*right >= pivot && left < right) {
-			--right;
-		}
-		while (*left <= pivot && left < right) {
-			++left;
-		}
-		if (left < right) {
-			std::swap(*left, *right);
-		}
-	}
-	*begin = *left;
-	*left = pivot;
-	quickSort(begin, left - 1);
-	quickSort(left + 1, end);
-}
-
-void sort(std::vector<std::string>& arr) {
-	quickSort(begin(arr), end(arr));
-}
-*/
 
 class BWT : public cstream {
 	std::string word;
@@ -95,23 +66,22 @@ public:
 class deBWT : public cstream {
 	int numOfCol;
 	std::vector<std::string> table;
-	std::string transform(std::string word) {
-		int sizeOfWord = word.size();
+	void transform(std::string& word) {
+		size_t sizeOfWord = word.size();
 		if (numOfCol == sizeOfWord) {
-			return word;
+			return;
 		}
 		table.resize(sizeOfWord);
-		for (int i = 0; i < sizeOfWord; ++i) {
-			table[i] = "";
+		for (size_t i = 0; i < sizeOfWord; ++i) {
+			table[i].clear();
 		}
-		std::vector<std::string> helpful(sizeOfWord, "");
-		for (int i = 0; i < sizeOfWord; ++i) {
-			for (int j = 0; j < sizeOfWord; ++j) {
+		for (size_t i = 0; i < sizeOfWord; ++i) {
+			for (size_t j = 0; j < sizeOfWord; ++j) {
 				table[j] = word[j] + table[j];
 			}
 			std::sort(table.begin(), table.end());
 		}
-		return (table[numOfCol]);
+		word = table[numOfCol];
 	}
 public:
 	deBWT(cstream* s) : cstream(s) {}
@@ -121,18 +91,18 @@ public:
 	int get() {
 		static int index1 = 0;
 		static int count = 0;
-		static std::string word = "";
-		if (index1>=count || index1==0){
-			word = "";
+		static std::string word;
+		if (index1 >= count || index1 == 0) {
+			word.clear();
 			index1 = 0;
 			count = 0;
-			if (numOfCol!=EOF) numOfCol = prev->get();
+			if (numOfCol != EOF) numOfCol = prev->get();
 			if (numOfCol != EOF) {
 				do {
 					int ch = prev->get();
 					if (ch == EOF) {
-						if (word != "") {
-							word = transform(word);
+						if (!word.empty()) {
+							transform(word);
 							numOfCol = EOF;
 							return word[index1++];
 						}
@@ -145,7 +115,7 @@ public:
 			else {
 				return EOF;
 			}
-			word = transform(word);
+			transform(word);
 			return word[index1++];
 		}
 		else {
