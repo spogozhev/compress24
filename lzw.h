@@ -1,6 +1,7 @@
 #pragma once
 #include "cstream.h"
 #include <map>
+#include "ringbuf.h"
 
 class stroka {
 	unsigned char* str;
@@ -79,10 +80,17 @@ public:
 		}
 		return (count < other.count);
 	}
+	unsigned char operator[](int index)const {
+		unsigned char res = 0;
+		if (index < count && index>=0) {
+			res = str[index];
+		}
+		return res;
+	}
 	int size()const {
 		return count;
 	}
-	unsigned char getfirst() {
+	/*unsigned char getfirst() {
 		if (count > 0) {
 			unsigned char res = str[0];
 			for (int i = 0; i < count - 1; ++i) {
@@ -91,7 +99,7 @@ public:
 			--count;
 		}
 		else throw"out of bounds";
-	}
+	}*/
 
 	friend std::ostream& operator<<(std::ostream& out, const stroka& s) {
 		for (int i = 0; i < s.count; ++i) {
@@ -127,16 +135,50 @@ public:
 		}
 		return -1;
 	}
-	const stroka& find(int x) {
+	/*const stroka& find(int x) {
 		for (auto i : data) {
 			if (i->second == x) {
 				return i->first;
 			}
 		}
 		throw "no str with this number";
+	}*/
+	int size()const { return data.size(); }
+	void print() {
+		for (int i = 0; i < data.size() && i < 500; ++i) {
+			for (auto pos = data.begin(); pos != data.end(); ++pos) {
+				if (pos->second == i) {
+					std::cout << pos->second << "\t" << pos->first << std::endl;
+					break;
+				}
+			}
+		}
+	}
+};
+class rtable {
+	int maxsize;
+	std::map<int,stroka> data;
+public:
+	table(int bitscount) {
+		maxsize = (1 << bitscount);
+		for (int i = 0; i < 256; ++i) {
+			data.insert({i, stroka(i)});
+		}
+	}
+	void insert(const stroka& x) {
+		int count = data.size();
+		if (count < maxsize) {
+			data.insert({count,x });
+		}
+	}
+	stroka find(int x) {
+		auto pos = data.find(x);
+		if (pos != data.end()) {
+			return pos->second;
+		}
+		return -1;
 	}
 	int size()const { return data.size(); }
-
 	void print() {
 		for (int i = 0; i < data.size() && i < 500; ++i) {
 			for (auto pos = data.begin(); pos != data.end(); ++pos) {
@@ -181,7 +223,6 @@ public:
 	bool is_open() { return prev->is_open(); }
 	int get() {
 		if (is_eof) {
-			//			table.print();
 			return EOF;
 		}
 		int res, ch;
@@ -208,20 +249,20 @@ public:
 };
 
 class deLZW : public cstream {
-	stroka entry;
-	stroka prev;
-	table decodeTable;
+	expandableRingbuf buf;
+	stroka pr;
+	rtable decodeTable;
 	bool is_eof;
 public:
-	deLZW(cstream* s, int bitscount = 12) :cstream(s), decodeTable(bitscount), iseof(false) {}
+	deLZW(cstream* s, int bitscount = 12) :cstream(s), decodeTable(bitscount), iseof(false), pr(),buf() {}
 	bool is_open() { return prev->is_open(); }
 	int get() {
 		if (is_eof) {
 			return EOF;
 		}
 		int res;
-		if (entry.size() > 0) {
-			res = entry.getfirst();
+		if (buf.size() > 0) {
+			res = buf.pop_front();
 		}
 		else {
 			int code = prev->get();
@@ -229,14 +270,17 @@ public:
 				is_eof = true;
 				return EOF;
 			}
-			if (code == decodeTable.size()) {
+			if (code >= decodeTable.size()) {
 				return EOF;
 			}
-			entry = decodeTable.find(code);
-			prev += entry[0];
-			decodeTable.insert(prev);
-			prev = entry;
-			res = static_cast<int>(entry.getfirst());
+			stroka entry = decodeTable.find(code);
+			buf = entry;
+			if (pr.size() > 0) {
+				pr += entry[0];
+				decodeTable.insert(prev);
+			}
+			pr = entry;
+			res = buf.pop_front();
 		}
 		return res;
 	}
