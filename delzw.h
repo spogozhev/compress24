@@ -47,7 +47,7 @@ class rtable {
 	int maxsize;
 	std::map<int, stroka> data;
 public:
-	table(int bitscount) {
+	rtable(int bitscount) {
 		maxsize = (1 << bitscount);
 		for (int i = 0; i < 256; ++i) {
 			data.insert({ i, stroka(i) });
@@ -65,14 +65,6 @@ public:
 			return pos->second;
 		}
 		return stroka();
-	}
-	bool is_in_table(const stroka& s) {
-		for (auto i : data){
-			if (i->second == s) {
-				return true;
-			}
-		}
-		return false;
 	}
 	int size()const { return static_cast<int>(data.size()); }
 	void print() {
@@ -108,11 +100,9 @@ public:
 				is_eof = true;
 				return EOF;
 			}
-			if (code == decodeTable.size() && pr.size()>0) {
+			if (code == decodeTable.size() && pr.size() > 0) {
 				pr += pr[0];
-				if (!decodeTable.is_in_table()) {
-					decodeTable.insert(pr);
-				}
+				decodeTable.insert(pr);
 				buf = pr;
 			}
 			else {
@@ -120,9 +110,7 @@ public:
 				buf = entry;
 				if (pr.size() > 0) {
 					pr += entry[0];
-					if (!decodeTable.is_in_table()) {
-						decodeTable.insert(pr);
-					}
+					decodeTable.insert(pr);
 				}
 				pr = entry;
 			}

@@ -63,9 +63,9 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			bits = (bits < 9) ? 9 : bits;
+			cs = new ibitstream(cs, bits);
 			cs = new deLZW(cs, bits);
 		}
-
 	}
 
 	std::ofstream outFile(argv[argc-1], std::ios_base::binary);
