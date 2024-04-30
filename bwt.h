@@ -3,6 +3,35 @@
 #include <string>
 #include <algorithm>
 #include "cstream.h"
+/*
+void quickSort(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end) {
+	if (begin >= end) {
+		return;
+	}
+	std::string pivot = *begin;
+	auto left = begin;
+	auto right = end;
+	while (left < right) {
+		while (*right >= pivot && left < right) {
+			--right;
+		}
+		while (*left <= pivot && left < right) {
+			++left;
+		}
+		if (left < right) {
+			std::swap(*left, *right);
+		}
+	}
+	*begin = *left;
+	*left = pivot;
+	quickSort(begin, left - 1);
+	quickSort(left + 1, end);
+}
+
+void sort(std::vector<std::string>& arr) {
+	quickSort(begin(arr), end(arr));
+}
+*/
 
 class BWT : public cstream {
 	std::string word;
@@ -28,6 +57,7 @@ class BWT : public cstream {
 		for (size_t i = 0; i < len; ++i) {
 			s[i] = transformationMatrix[i].back();
 		}
+		s = static_cast<char>(numOfStr) + s;
 	}
 	void shiftString(std::string& given) {
 		char lastSymb = given.back();
@@ -42,29 +72,24 @@ public:
 	int get() {
 		static int index = -1;
 		int count = 0;
-		static bool isNumPrinted = false;
-		if (index != word.size() - 1 || isNumPrinted) {
-			isNumPrinted = false;
+		if (index != word.size() - 1) {
 			return word[++index];
 		}
 		word.clear();
+		index = -1;
 		do {
 			int ch = prev->get();
 			if (ch == EOF) {
-				if (word != "") {
-					transform(word);
-					isNumPrinted = true;
-					return numOfStr;
+				if (word.empty()) {
+					return EOF;
 				}
-				return EOF;
+				break;
 			}
 			word.push_back(static_cast<char>(ch));
 		} while (++count < 12);
 		transform(word);
-		isNumPrinted = true;
-		return numOfStr;
+		return word[++index];
 	}
-
 };
 
 class deBWT : public cstream {
@@ -97,8 +122,10 @@ public:
 		static int index1 = 0;
 		static int count = 0;
 		static std::string word = "";
-		if (index1>=12 || index1==0){
+		if (index1>=count || index1==0){
+			word = "";
 			index1 = 0;
+			count = 0;
 			if (numOfCol!=EOF) numOfCol = prev->get();
 			if (numOfCol != EOF) {
 				do {
@@ -118,7 +145,7 @@ public:
 			else {
 				return EOF;
 			}
-			transform(word);
+			word = transform(word);
 			return word[index1++];
 		}
 		else {
