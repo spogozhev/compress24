@@ -76,7 +76,7 @@ class delz77 : public cstream {
 
 public:
 	delz77(cstream* s, size_t buf_size = 128) : cstream(s),buf(buf_size) {
-		ans = new int[buf_size* 2];
+		ans = new int[buf_size* 3];
 		counter = 0 ;
 		ans_len = -1;
 	}
@@ -264,7 +264,9 @@ public:
 		offset = 0;
 		length = 0;
 		next = 0;
-		while (true) {
+		
+		for (int kol = 0; kol < 128;++kol) {
+		
 			buf.find(s, res);
 			if (res == -1) {
 				int tmp = offset;
@@ -272,7 +274,6 @@ public:
 				for (int i = 0; i < s.size(); ++i) {
 					buf.push_back(s[i]);
 				}
-				buf.is_empty();
 				offset = -1;
 				return tmp;
 			}
@@ -280,6 +281,17 @@ public:
 			{
 				offset = res;
 				length = s.size();
+
+				if (length == 127) {
+					int tmp = offset;
+					next = prev->get();
+					for (int i = 0; i < s.size(); ++i) {
+						buf.push_back(s[i]);
+					}
+					offset = -1;
+					return tmp;
+				}
+
 				ch = prev->get();
 				if (ch == EOF) {
 					int tmp = offset;
