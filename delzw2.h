@@ -56,12 +56,11 @@ public:
 	}
 	bool insert(const stroka& x) {
 		int count = data.size();
-		if (count < maxsize) {
-			data.insert({ count,x });
-		}
-		else
+		data.insert ({ count,x });
+
+		if (count == maxsize - 1)
 		{
-			resize(++bitscnt);
+			resize (++bitscnt);
 			return false;
 		}
 
@@ -90,7 +89,7 @@ public:
 		}
 	}
 };
-class deLZW : public cstream {
+class deLZW2 : public cstream {
 	int bits;
 	unsigned int buf;
 	int count;
@@ -100,7 +99,7 @@ class deLZW : public cstream {
 	rtable decodeTable;
 	bool is_eof;
 public:
-	deLZW(cstream* s, int bitscount = 12) : cstream(s), decodeTable(bitscount), is_eof(false), 
+	deLZW2(cstream* s, int bitscount = 12) : cstream(s), decodeTable(bitscount), is_eof(false), 
 		pr(stroka()), exp_buf(expandableRingbuf()), bits(bitscount), count(0), buf(0) {}
 	bool is_open() { return prev->is_open(); }
 	int get() {
