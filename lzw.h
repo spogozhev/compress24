@@ -40,29 +40,6 @@ public:
 	}
 };
 
-class bitsbuf {
-	unsigned int buf;
-	int count;
-public:
-	bitsbuf() : buf(0), count(0) {}
-	int get_byte() {
-		if (count < 8) return -1;
-		unsigned int result = buf >> (count - 8);
-		buf -= result << (count - 8);
-		count -= 8;
-		return static_cast<int>(result);
-	}
-	int get() {
-		return static_cast<int>(buf);
-	}
-	void push(int x, int bitscount) {
-		buf <<= bitscount;
-		buf |= x;
-		count += bitscount;
-	}
-	int size() const { return count; }
-};
-
 class LZW : public cstream {
 	stroka str;
 	table table;
@@ -94,5 +71,93 @@ public:
 		res = table.find(str);
 		str = stroka(ch);
 		return res;
+	}
+};
+
+class growingTable {
+	int maxsize;
+	std::map<stroka, unsigned> data;
+public:
+	growingTable() :maxsize(0xFFFFFFF) {
+		for (int i = 0; i < 256; ++i) {
+			data.insert({ stroka(static_cast<unsigned char>(i)), i });
+		}
+	}
+	void insert(const stroka& x) {
+		int count = data.size();
+		if (count < maxsize) {
+			data.insert({ x, count });
+		}
+	}
+	int find(const stroka& x) {
+		auto pos = data.find(x);
+		if (pos != data.end()) {
+			return pos->second;
+		}
+		return -1;
+	}
+	int size()const { return data.size(); }
+};
+
+class bitsbuf {
+	unsigned int buf;
+	int count;
+public:
+	bitsbuf() : buf(0), count(0) {}
+	int get_byte() {
+		if (count < 8) return -1;
+		unsigned int result = buf >> (count - 8);
+		buf -= result << (count - 8);
+		count -= 8;
+		return static_cast<int>(result);
+	}
+	int get() {
+		return static_cast<int>(buf);
+	}
+	void push(int x, int bitscount) {
+		buf <<= bitscount;
+		buf |= x;
+		count += bitscount;
+	}
+	int size() const { return count; }
+};
+
+class LZW2 : public cstream {
+	stroka str;
+	growingTable table;
+	bool is_eof;
+	bitsbuf buffer;
+	int curbits;
+public:
+	LZW2(cstream* s, int bitscount = 12) : cstream(s), curbits(bitscount), table(growingTable()), buffer(bitsbuf()), is_eof(false) {}
+	bool is_open() { return prev->is_open(); }
+	int get() {
+		if (buffer.size() < 8) {
+			if (is_eof) {
+				return (buffer.size() > 0) ? buffer.get() : EOF;
+			}
+			int res, ch;
+			do {
+				ch = prev->get();
+				if (ch == EOF) {
+					is_eof = true;
+					buffer.push(table.find(str), curbits);
+				}
+				stroka str_ch = str + ch;
+				res = table.find(str_ch);
+				if (res == -1) {
+					table.insert(str_ch);
+					if ((1 << curbits) <= table.size()) {
+						++curbits;
+					}
+				}
+				else {
+					str += ch;
+				}
+			} while (res != -1);
+			buffer.push(table.find(str), curbits);
+			str = stroka(ch);
+		}
+		return buffer.get_byte();
 	}
 };
