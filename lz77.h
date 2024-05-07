@@ -5,11 +5,11 @@
 
 class delz77_buf {
 
-	int size = 7;
+	int size;
 	int* buf;
 	int end;
 public:
-	delz77_buf() {
+	delz77_buf(size_t size): size(size) {
 		end =  0;
 		buf = new int[size];
 		for (int i = 0; i < size; ++i) {
@@ -38,15 +38,18 @@ public:
 	}
 
 	void push_back(int in) {
-		if (buf[end+1] == -1) {
-			buf[end+1] = in;
+		int tmp = end;
+		if (buf[0] == -1 ) {
+			buf[0] = in;
+		}
+		else if ( end + 1 < size ) {
+			buf[++end] = in;
 		}
 		else{
 			next(end);
 			buf[end] = in;
 		}
 	}
-
 	void get(int offset,int len, int ret[]) {
 		int cur = end;
 		for (int i = 0; i < offset - 1; ++i) {
@@ -55,7 +58,7 @@ public:
 
 		int pos = 0;
 		for (int i = 0; i < len; ++i,next(cur)) {
-			ret[pos] = buf[i];
+			ret[i] = buf[cur];
 		}
 	}
 	~delz77_buf() {
@@ -72,15 +75,15 @@ class delz77 : public cstream {
 	int ans_len;
 
 public:
-	delz77(cstream* s) : cstream(s) {
-		ans = new int[128];
+	delz77(cstream* s, size_t buf_size = 128) : cstream(s),buf(buf_size) {
+		ans = new int[buf_size* 2];
 		counter = 0 ;
 		ans_len = -1;
 	}
 	bool is_open() { return prev->is_open(); }
 	int get() {
 
-		if (counter <= ans_len) {
+		if (counter < ans_len) {
 			++counter;
 			return ans[counter - 1];
 		}
@@ -101,17 +104,22 @@ public:
 		}
 
 		buf.get(offset, len, ans);
-		counter = len;
+		//counter = len;
+
 		for (int i = 0; i < len; ++i) {
 			buf.push_back(ans[i]);
 		}
+
 		counter = 1;
 		ans_len = len;
 
 		int symb = prev->get();
 		if (symb != EOF) {
 			buf.push_back(symb);
+		    ans[ans_len] = symb;
+			++ans_len;
 		}
+
 
 		return ans[0];
 
@@ -138,7 +146,7 @@ class lz77_bufer
 	int first;
 	int length;
 public:
-	lz77_bufer() : size(7), length(0), first(0)
+	lz77_bufer(size_t size) : size(size), length(0), first(0)
 	{
 		arr = new int[size] {0};
 	}
@@ -215,7 +223,7 @@ class lz77 : public cstream
 	int length;
 	int next;
 public:
-	lz77(cstream* s) : cstream(s), offset(-1), length(-1), next(-1), buf() {}
+	lz77(cstream* s,size_t size = 128) : cstream(s), offset(-1), length(-1), next(-1), buf(size) {}
 	
 	bool is_open() { return prev->is_open(); }
 	int get()

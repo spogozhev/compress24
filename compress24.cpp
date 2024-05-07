@@ -55,10 +55,27 @@ int main(int argc, char* argv[]) {
 			cs = new obitstream(cs, bits);
 		}
 		else if (strcmp(argv[i], "-lz77") == 0) {
-			cs = new lz77(cs);
+			int bits = 128;
+			if (i + 1 < argc - 2) {
+				bits = atoi(argv[i + 1]);
+				if (bits > 0) {
+					++i;
+				}
+			}
+			bits = (bits < 5) ? 5 : bits;
+
+			cs = new lz77(cs,bits);
 		}
 		else if (strcmp(argv[i], "-delz77") == 0) {
-			cs = new delz77(cs);
+			int bits = 128;
+			if (i + 1 < argc - 2) {
+				bits = atoi(argv[i + 1]);
+				if (bits > 0) {
+					++i;
+				}
+			}
+			bits = (bits < 5) ? 5 : bits;
+			cs = new delz77(cs,bits);
 		}
 	}
 
