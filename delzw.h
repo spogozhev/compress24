@@ -45,19 +45,27 @@ public:
 
 class rtable {
 	int maxsize;
+	int bitscnt;
 	std::map<int, stroka> data;
 public:
-	rtable(int bitscount) {
+	rtable(int bitscount) : bitscnt(bitscount) {
 		maxsize = (1 << bitscount);
 		for (int i = 0; i < 256; ++i) {
 			data.insert({ i, stroka(i) });
 		}
 	}
-	void insert(const stroka& x) {
+	bool insert(const stroka& x) {
 		int count = data.size();
 		if (count < maxsize) {
 			data.insert({ count,x });
 		}
+		else
+		{
+			resize(++bitscnt);
+			return false;
+		}
+
+		return true;
 	}
 	stroka find(int x) {
 		auto pos = data.find(x);
@@ -67,6 +75,10 @@ public:
 		return stroka();
 	}
 	int size()const { return static_cast<int>(data.size()); }
+	void resize (int newbitscount)
+	{
+		maxsize = (1 << newbitscount);
+	}
 	void print() {
 		for (int i = 0; i < data.size() && i < 500; ++i) {
 			for (auto pos = data.begin(); pos != data.end(); ++pos) {
@@ -79,42 +91,83 @@ public:
 	}
 };
 class deLZW : public cstream {
-	expandableRingbuf buf;
+	int bits;
+	unsigned int buf;
+	int count;
+
+	expandableRingbuf exp_buf;
 	stroka pr;
 	rtable decodeTable;
 	bool is_eof;
 public:
-	deLZW(cstream* s, int bitscount = 12) :cstream(s), decodeTable(bitscount), is_eof(false), pr(stroka()), buf(expandableRingbuf()) {}
+	deLZW(cstream* s, int bitscount = 12) : cstream(s), decodeTable(bitscount), is_eof(false), 
+		pr(stroka()), exp_buf(expandableRingbuf()), bits(bitscount), count(0), buf(0) {}
 	bool is_open() { return prev->is_open(); }
 	int get() {
+
 		if (is_eof) {
 			return EOF;
 		}
 		int res;
-		if (buf.size() > 0) {
-			res = static_cast<int>(buf.pop_front());
+		if (exp_buf.size() > 0) {
+			res = static_cast<int>(exp_buf.pop_front());
 		}
 		else {
-			int code = prev->get();
+			int code;
+
+			while (count < bits && !is_eof)
+			{
+				int tmp = prev->get ();
+				if (tmp == EOF)
+				{
+					is_eof = true;
+				} 		
+				else
+				{
+					buf = (buf << 8) | static_cast<unsigned int>(tmp);
+					count += 8;
+				}
+			}
+
+			if (is_eof && count < bits)
+			{
+				code = EOF;
+			}
+			else
+			{
+				int shift = count - bits;
+				unsigned int result = buf >> shift;
+				buf -= result << shift;
+				count -= bits;
+				code = static_cast<int>(result);
+			}
+
 			if (code == EOF || code > decodeTable.size()) {
 				is_eof = true;
 				return EOF;
 			}
+
 			if (code == decodeTable.size() && pr.size() > 0) {
 				pr += pr[0];
-				decodeTable.insert(pr);
-				buf = pr;
+				if (!decodeTable.insert (pr))
+				{
+					++bits;
+				}
+				exp_buf = pr;
 			}
 			else {
 				stroka entry = decodeTable.find(code);
-				buf = entry;
+				exp_buf = entry;
 				if (pr.size() > 0) {
 					pr += entry[0];
-					decodeTable.insert(pr);
+					if (!decodeTable.insert (pr))
+					{
+						++bits;
+					}
 				}
 				pr = entry;
 			}
-			res = static_cast<int>(buf.pop_front());
+			res = static_cast<int>(exp_buf.pop_front());
 		}
 		return res;
 	}
