@@ -7,3 +7,5 @@
 #include "obitstream.h"
 #include "delzw.h"
 #include "ibitstream.h"
+#include "bwt.h"
+

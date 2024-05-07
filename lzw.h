@@ -23,7 +23,7 @@ public:
 		count = other.count;
 		maxsize = other.maxsize;
 		str = new unsigned char[maxsize];
-		memcpy(reinterpret_cast<char*>(str), other.str, maxsize);
+		memcpy(str, other.str, maxsize);
 	}
 	stroka& operator=(const stroka& other) {
 		if (this != &other) {
@@ -48,7 +48,7 @@ public:
 		if (count == maxsize) {
 			maxsize += 4;
 			unsigned char* tmp = new unsigned char[maxsize];
-			memcpy(reinterpret_cast<char*>(tmp), str, count);
+			memcpy(tmp, str, count);
 			delete[] str;
 			str = tmp;
 		}
