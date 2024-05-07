@@ -11,6 +11,7 @@ void help() {
 	std::cout << "  -demtf   decode move to front\n";
 	std::cout << "  -derle   decode RLE\n";
 	std::cout << "  -lzw     Lempel-Ziv-Welch encoding\n";
+	std::cout << "  -delzw   decode LZW\n";
 }
 
 char* str2lower(char* arg) {
@@ -64,7 +65,6 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			bits = (bits < 9) ? 9 : bits;
-			cs = new ibitstream(cs, bits);
 			cs = new deLZW(cs, bits);
 		}
 		else if (strcmp(argv[i], "-bwt") == 0)
