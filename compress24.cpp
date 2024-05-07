@@ -11,6 +11,8 @@ void help() {
 	std::cout << "  -demtf   decode move to front\n";
 	std::cout << "  -derle   decode RLE\n";
 	std::cout << "  -lzw     Lempel-Ziv-Welch encoding\n";
+    std::cout << "  -bwt     Burrows-Wheeler Transform\n";
+    std::cout << "  -debwt    decode Burrows-Wheeler Transform\n";
 }
 
 char* str2lower(char* arg) {
@@ -67,10 +69,28 @@ int main(int argc, char* argv[]) {
 			cs = new ibitstream(cs, bits);
 			cs = new deLZW(cs, bits);
 		}
-		else if (strcmp(argv[i], "-bwt") == 0)
-			cs = new BWT(cs);
-		else if (strcmp(argv[i], "-debwt") == 0)
-			cs = new deBWT(cs);
+		else if (strcmp(argv[i], "-bwt") == 0) {
+            if (i + 1 < argc - 2) {
+                int sz = atoi(argv[i + 1]);
+                if (sz > 0) {
+                    ++i;
+                }
+                cs = new BWT(cs, sz);
+            } else {
+                cs = new BWT(cs);
+            }
+        }
+		else if (strcmp(argv[i], "-debwt") == 0) {
+            if (i + 1 < argc - 2) {
+                int sz = atoi(argv[i + 1]);
+                if (sz > 0) {
+                    ++i;
+                }
+                cs = new deBWT(cs, sz);
+            } else {
+                cs = new deBWT(cs);
+            }
+        }
 	}
 
 	std::ofstream outFile(argv[argc-1], std::ios_base::binary);
