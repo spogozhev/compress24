@@ -1,5 +1,6 @@
 #pragma once
 #include "cstream.h"
+#include <cstring>
 #include <map>
 <<<<<<< HEAD
 #include "stroka.h"
