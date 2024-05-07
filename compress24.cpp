@@ -1,4 +1,4 @@
-﻿#include <ctype.h>
+#include <ctype.h>
 #include <iostream>
 #include <fstream>
 #include "cstreams.h"
@@ -12,6 +12,8 @@ void help() {
 	std::cout << "  -derle   decode RLE\n";
 	std::cout << "  -lzw     Lempel-Ziv-Welch encoding\n";
 	std::cout << "  -delzw   decode LZW\n";
+	std::cout << "  -lzw2    Lempel-Ziv-Welch encoding 2 version\n";
+	std::cout << "  -delzw2  decode LZW 2 version\n";
 }
 
 char* str2lower(char* arg) {
@@ -44,7 +46,7 @@ int main(int argc, char* argv[]) {
 			cs = new RLE(cs);
 		else if (strcmp(argv[i], "-derle") == 0)
 			cs = new deRLE(cs);
-		else if (strcmp(argv[i], "-lzw") == 0) {
+		else if (strcmp(argv[i], "-lzw2") == 0) {
 			int bits = 0;
 			if (i + 1 < argc - 2) {
 				bits = atoi(argv[i + 1]);
@@ -53,10 +55,9 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			bits = (bits < 9) ? 9 : bits;
-			cs = new LZW(cs, bits);
-			cs = new obitstream(cs, bits);
+			cs = new LZW2(cs, bits);
 		}
-		else if (strcmp(argv[i], "-delzw") == 0) {
+		else if (strcmp(argv[i], "-delzw2") == 0) {
 			int bits = 0;
 			if (i + 1 < argc - 2) {
 				bits = atoi(argv[i + 1]);
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			bits = (bits < 9) ? 9 : bits;
-			cs = new deLZW(cs, bits);
+			cs = new deLZW2(cs, bits);
 		}
 		else if (strcmp(argv[i], "-bwt") == 0)
 			cs = new BWT(cs);
