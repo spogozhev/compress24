@@ -1,0 +1,15 @@
+mkdir -p dataset
+wget -nc http://corpus.canterbury.ac.nz/resources/artificl.tar.gz
+tar -xf artificl.tar.gz --directory dataset
+
+wget -nc http://corpus.canterbury.ac.nz/resources/cantrbry.tar.gz
+tar -xf cantrbry.tar.gz --directory dataset
+
+wget -nc http://corpus.canterbury.ac.nz/resources/large.tar.gz
+tar -xf large.tar.gz --directory dataset
+
+wget -nc http://corpus.canterbury.ac.nz/resources/misc.tar.gz
+tar -xf misc.tar.gz --directory dataset
+
+wget -nc http://corpus.canterbury.ac.nz/resources/calgary.tar.gz
+tar -xf calgary.tar.gz --directory dataset

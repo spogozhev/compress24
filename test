@@ -1,0 +1,43 @@
+#!/bin/bash
+mkdir -p build
+cd build
+cmake ..
+cmake --build .
+
+[ ! -d "dataset" ] && ../test-download
+
+echo 'Test LZW'
+for f in ./dataset/*; do
+	./compress24 -lzw "$f" output
+	./compress24 -d output result
+	cmp result "$f" 
+done
+
+echo 'Test RLE'
+for f in ./dataset/*; do
+    ./compress24 -rle "$f" output
+    ./compress24 -d output result
+    cmp result "$f"
+done
+
+echo 'Test BWT'
+for f in ./dataset/*; do
+    ./compress24 -bwt "$f" output
+    ./compress24 -d output result
+    cmp result "$f"
+done
+
+echo 'Test BWT+RLE+LZW'
+for f in ./dataset/*; do
+    ./compress24 -bwt -rle -lzw 12 output
+    ./compress24 -d output result
+    cmp result "$f"
+done
+
+
+mkdir -p results
+for f in ./dataset/*; do
+    ./compress24 -bwt -rle -lzw 12 "$f" "results/${f##*/}.bwt.rle.lzw"
+done
+
+
