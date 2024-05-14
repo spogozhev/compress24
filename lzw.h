@@ -75,19 +75,22 @@ public:
 };
 
 class growingTable {
-	int maxsize;
 	std::map<stroka, unsigned> data;
+	int maxsize;
 public:
-	growingTable() :maxsize(0xFFFFFFF) {
+	growingTable(int bits): maxsize(1<<bits) {
 		for (int i = 0; i < 256; ++i) {
 			data.insert({ stroka(static_cast<unsigned char>(i)), i });
 		}
 	}
-	void insert(const stroka& x) {
-		int count = data.size();
-		if (count < maxsize) {
-			data.insert({ x, count });
+	bool insert(const stroka& x) {
+		int count = static_cast<int>(data.size());
+		data.insert({ x, count });
+		if (count == maxsize-1) {
+			maxsize <<= 1;
+			return true;
 		}
+		return false;
 	}
 	int find(const stroka& x) {
 		auto pos = data.find(x);
@@ -96,7 +99,7 @@ public:
 		}
 		return -1;
 	}
-	int size()const { return data.size(); }
+	int size()const { return static_cast<int>(data.size()); }
 };
 
 class bitsbuf {
@@ -128,33 +131,43 @@ class LZW2 : public cstream {
 	bool is_eof;
 	bitsbuf buffer;
 	int curbits;
+	int shift;
 public:
-	LZW2(cstream* s, int bitscount = 12) : cstream(s), curbits(bitscount), table(growingTable()), buffer(bitsbuf()), is_eof(false) {}
+	LZW2(cstream* s, int bitscount = 12) : cstream(s), curbits(bitscount), table(bitscount), buffer(bitsbuf()), is_eof(false),shift(-1) {}
 	bool is_open() { return prev->is_open(); }
 	int get() {
 		if (buffer.size() < 8) {
 			if (is_eof) {
-				return (buffer.size() > 0) ? buffer.get() : EOF;
+				return ((buffer.size() > 0) ? buffer.get() : EOF);
 			}
 			int res, ch;
 			do {
 				ch = prev->get();
 				if (ch == EOF) {
 					is_eof = true;
+					if (shift == 0) {
+						++curbits;
+						--shift;
+					}
 					buffer.push(table.find(str), curbits);
 				}
 				stroka str_ch = str + ch;
 				res = table.find(str_ch);
 				if (res == -1) {
-					table.insert(str_ch);
-					if ((1 << curbits) <= table.size()) {
-						++curbits;
+					if (table.insert(str_ch)) {
+						shift = 2;
 					}
 				}
 				else {
 					str += ch;
 				}
 			} while (res != -1);
+			if (shift >= 0) {
+				if (shift == 0) {
+					++curbits;
+				}
+				--shift;
+			}
 			buffer.push(table.find(str), curbits);
 			str = stroka(ch);
 		}
