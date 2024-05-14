@@ -4,7 +4,6 @@
 #include "rle.h"
 #include "mtf.h"
 #include "lzw.h"
-#include "obitstream.h"
 #include "delzw.h"
 #include "bwt.h"
 
