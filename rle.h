@@ -3,22 +3,19 @@
 #include "ringbuf.h"
 
 class RLE : public cstream {
-	//unsigned char buf[132];
-	//int buflen;
 	ringbuf<unsigned char, 132> buf;
 	int counter;
 public:
 	RLE(cstream* s) : cstream(s), counter(0) {}
 	bool is_open() { return prev->is_open(); }
 	int get() {
-		/*
-			counter - количество символов, которые ещё надо отдать
-		*/
 		if (counter > 0) {
 			--counter;
 			return buf.pop_front();
 		}
-		int ch = prev->get();
+		int ch;
+		if (buf.size()<2){
+		ch  = prev->get();
 		if (ch == EOF) {
 			if ((buf.size() == 2) && buf.is_rep()) {
 				counter = 1;
@@ -40,8 +37,8 @@ public:
 			}
 			buf.push_back(ch);
 		}
+		}
 		while (buf.size() < 130 && buf.is_rep()) {
-			// копим повторения
 			ch = prev->get();
 			if (ch == EOF) break;
 			buf.push_back(ch);
@@ -51,7 +48,6 @@ public:
 			auto tmp2 = buf.pop_back();
 			auto tmp1 = buf.pop_back();
 			buf.empty();
-
 			if (ch == EOF) {
 				buf.push_back(tmp2);
 			}
@@ -68,8 +64,8 @@ public:
 			counter = 1;
 			return 0;
 		}
+
 		while (buf.size() < 130 && !buf.is_rep()) {
-			// копим уникальные элементы
 			ch = prev->get();
 			if (ch == EOF) break;
 			buf.push_back(ch);
