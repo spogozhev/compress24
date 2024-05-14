@@ -5,11 +5,11 @@
 #include "cstream.h"
 
 class BWT : public cstream {
-    std::deque<int> word;
+    std::deque<unsigned char> word;
     int numOfStr;
     int sizeOfBlock;
-    void transform(std::deque<int>& s) {
-        std::vector<std::deque<int>> transformationMatrix;
+    void transform(std::deque<unsigned char>& s) {
+        std::vector<std::deque<unsigned char>> transformationMatrix;
         size_t len = s.size();
         transformationMatrix.resize(len);
         transformationMatrix[0] = s;
@@ -31,7 +31,7 @@ class BWT : public cstream {
         }
         s.push_front(numOfStr);
     }
-    void shiftDeque(std::deque<int>& given) {
+    void shiftDeque(std::deque<unsigned char>& given) {
         int lastSymb = given.back();
         given.pop_back();
         given.push_front(lastSymb);
@@ -43,15 +43,15 @@ public:
     }
     int get() {
         static int index = -1;
-        int count = 0;
         if (index != word.size() - 1) {
             return word[++index];
         }
+        int count = 0;
         word.clear();
         index = -1;
         do {
             int ch = prev->get();
-            if (ch == EOF) {
+            if (ch == EOF) {int
                 if (word.empty()) {
                     return EOF;
                 }
@@ -67,8 +67,8 @@ public:
 class deBWT : public cstream {
     int numOfCol;
     int sizeOfBlock;
-    std::vector<std::deque<int>> table;
-    void transform(std::deque<int>& word) {
+    std::vector<std::deque<unsigned char>> table;
+    void transform(std::deque<unsigned char>& word) {
         size_t sizeOfWord = word.size();
         if (numOfCol == sizeOfWord) {
             return;
@@ -93,7 +93,7 @@ public:
     int get() {
         static int index1 = 0;
         static int count = 0;
-        static std::deque<int> word;
+        static std::deque<unsigned char> word;
         if (index1 >= count || index1 == 0) {
             word.clear();
             index1 = 0;
@@ -111,7 +111,7 @@ public:
                         numOfCol = EOF;
                         return EOF;
                     }
-                    word.push_back(static_cast<char>(ch));
+                    word.push_back(ch);
                 } while (++count < sizeOfBlock);
             }
             else {
