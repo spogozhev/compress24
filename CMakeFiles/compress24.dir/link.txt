@@ -1,1 +1,0 @@
-/usr/bin/c++  -pedantic-errors -O2 -std=c++20 -rdynamic CMakeFiles/compress24.dir/compress24.cpp.o -o compress24 

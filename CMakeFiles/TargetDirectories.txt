@@ -1,3 +1,0 @@
-/home/st117306/compress24/CMakeFiles/compress24.dir
-/home/st117306/compress24/CMakeFiles/edit_cache.dir
-/home/st117306/compress24/CMakeFiles/rebuild_cache.dir
