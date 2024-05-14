@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     }
 
 	if (strcmp(argv[1], "-d")==0){
-		cs->get(); // Skip C2
+		cs->get(); // Skip C24
 		cs->get();
 		cs->get();
 		int ch;
@@ -70,7 +70,6 @@ int main(int argc, char* argv[]) {
             }
 		}
 	} else {
-
 		std::vector<unsigned char> code_str;
 		for (int i = 1; i < argc - 2; ++i) {
 			str2lower(argv[i]);
