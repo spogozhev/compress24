@@ -5,6 +5,6 @@
 #include "mtf.h"
 #include "lzw.h"
 #include "obitstream.h"
-#include "delzw2.h"
+#include "delzw.h"
 #include "bwt.h"
 
