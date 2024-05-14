@@ -65,6 +65,11 @@ int main(int argc, char* argv[]) {
 			bits = (bits < 5) ? 5 : bits;
 
 			cs = new lz77(cs,bits);
+			int bit_len = 0;
+			while ( (1<<bit_len) < bits ){
+				++bit_len;
+			}
+			cs = new obitstream_skip(cs, bit_len,3);
 		}
 		else if (strcmp(argv[i], "-delz77") == 0) {
 			int bits = 128;
@@ -75,6 +80,12 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			bits = (bits < 5) ? 5 : bits;
+
+			int bit_len = 0;
+			while ((1 << bit_len) < bits) {
+				++bit_len;
+			}
+			cs = new ibitstream_skip(cs, bit_len,3);
 			cs = new delz77(cs,bits);
 		}
 	}

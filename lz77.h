@@ -86,12 +86,7 @@ class delz77 : public cstream {
 	int ans_len;
 
 public:
-	delz77(cstream* s, size_t buf_size = 128) : cstream(s), buf(0) {
-		if (buf_size > 255) {
-			buf_size = 255;
-		}
-
-		buf = delz77_buf(buf_size);
+	delz77(cstream* s, size_t buf_size = 128) : cstream(s), buf(buf_size) {
 		ans = new int[buf_size * 3];
 		counter = 0;
 		ans_len = -1;
@@ -258,13 +253,10 @@ class lz77 : public cstream
 	int offset;
 	int length;
 	int next;
+
+	int maxsize;
 public:
-	lz77(cstream* s, size_t size = 128) : cstream(s), offset(-1), length(-1), next(-1), buf(0) {
-		if (size > 255) {
-			size = 255;
-		}
-		buf = lz77_bufer(size);
-	}
+	lz77(cstream* s, size_t size = 128) : cstream(s), offset(-1), length(-1), next(-1), maxsize(size), buf(size) {}
 	
 	bool is_open() { return prev->is_open(); }
 	int get()
@@ -306,7 +298,7 @@ public:
 		length = 0;
 		next = 0;
 		
-		for (int kol = 0; kol < 257;++kol) {
+		for (int kol = 0;kol < maxsize+2;++kol) {
 		
 			buf.find(s, res);
 			if (res == -1) {
@@ -322,8 +314,8 @@ public:
 			{
 				offset = res;
 				length = s.size();
-
-				if (length == 255) {
+				
+				if (length == maxsize) {
 					int tmp = offset;
 					next = prev->get();
 					for (int i = 0; i < s.size(); ++i) {
@@ -347,5 +339,105 @@ public:
 
 		}
 
+	}
+};
+
+
+class obitstream_skip : public cstream {
+	int bits;
+	unsigned int buf;
+	int count;
+	bool is_eof;
+	int skip;
+
+	int skip_counter;
+public:
+	obitstream_skip(cstream* s, int bitscount = 12, int skip = 0) : cstream(s), bits(bitscount),
+		count(0), buf(0), is_eof(false), skip(skip), skip_counter(0) {}
+	bool is_open() { return prev->is_open(); }
+	int get() {
+		while (count < 8 && !is_eof) {
+			int tmp = prev->get();
+			if (skip != 0) {
+				++skip_counter;
+			}
+			if (tmp == EOF) {
+				is_eof = true;
+			}
+			else {
+
+				if (skip_counter != skip) {
+					buf = (buf << bits) | static_cast<unsigned int>(tmp);
+					count += bits;
+				}
+				else {
+					// char = 8 
+					buf = (buf << 8) | static_cast<unsigned int>(tmp);
+					count += 8;
+					skip_counter = 0;
+				}
+
+			}
+		}
+		if (is_eof && count == 0) {
+			return EOF;
+		}
+		if (count < 8) {
+			buf <<= (8 - count);
+			count = 8;
+		}
+		int shift = count - 8;
+		unsigned int result = buf >> shift;
+		buf -= result << shift;
+		count -= 8;
+		return static_cast<int>(result);
+	}
+};
+
+class ibitstream_skip : public cstream {
+	int bits;
+	unsigned int buf;
+	int count;
+	bool is_eof;
+	int skip;
+
+	int skip_counter;
+
+public:
+	ibitstream_skip(cstream* s, int bitscount = 12, int skip = 0) : cstream(s), bits(bitscount),
+		count(0), buf(0), is_eof(false),skip(skip),skip_counter(0) {}
+	bool is_open() { return prev->is_open(); }
+	int get() {
+		while (count < bits && !is_eof) {
+			int tmp = prev->get();
+
+			if (tmp == EOF) {
+				is_eof = true;
+			}
+			else {
+				buf = (buf << 8) | static_cast<unsigned int>(tmp);
+				count += 8;
+			}
+		}
+		if (is_eof && count < bits) {
+			return EOF;
+		}
+
+		int shift = count - bits;
+		if (skip_counter == skip-1 && skip != 0) {
+			shift = count - 8;
+			skip_counter = -1;
+		}
+
+		unsigned int result = buf >> shift;
+		buf -= result << shift;
+		if (skip_counter == -1) {
+			count -= 8;
+		}
+		else{
+			count -= bits;
+		}
+		++skip_counter;
+		return static_cast<int>(result);
 	}
 };
