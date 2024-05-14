@@ -51,7 +51,7 @@ public:
         index = -1;
         do {
             int ch = prev->get();
-            if (ch == EOF) {int
+            if (ch == EOF) {
                 if (word.empty()) {
                     return EOF;
                 }
