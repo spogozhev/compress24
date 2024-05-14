@@ -17,6 +17,17 @@ public:
 		}
 	}
 
+	delz77_buf& operator=(delz77_buf&& other) noexcept{
+		if (&other != this) {
+			delete[] buf;
+			size = other.size;
+			buf = other.buf;
+			end = other.end;
+
+			other.buf = nullptr;
+		}
+		return *this;
+	}
 	void next(int& in) {
 		++in;
 		if (in >= size || buf[in] == -1) {
@@ -75,11 +86,18 @@ class delz77 : public cstream {
 	int ans_len;
 
 public:
-	delz77(cstream* s, size_t buf_size = 128) : cstream(s),buf(buf_size) {
-		ans = new int[buf_size* 3];
-		counter = 0 ;
+	delz77(cstream* s, size_t buf_size = 128) : cstream(s), buf(0) {
+		if (buf_size > 255) {
+			buf_size = 255;
+		}
+
+		buf = delz77_buf(buf_size);
+		ans = new int[buf_size * 3];
+		counter = 0;
 		ans_len = -1;
 	}
+
+	
 	bool is_open() { return prev->is_open(); }
 	int get() {
 
@@ -148,7 +166,25 @@ class lz77_bufer
 public:
 	lz77_bufer(size_t size) : size(size), length(0), first(0)
 	{
-		arr = new int[size] {0};
+		if (size != 0) {
+			arr = new int[size] {0};
+		}
+		else{
+			arr = nullptr;
+		}
+	}
+
+	lz77_bufer& operator=(lz77_bufer&& other) noexcept {
+		if (&other != this) {
+			delete[] arr;
+			size = other.size;
+			arr = other.arr;
+			first = other.first;
+			length = other.length;
+
+			other.arr = nullptr;
+		}
+		return *this;
 	}
 
 	bool is_empty() {
@@ -223,7 +259,12 @@ class lz77 : public cstream
 	int length;
 	int next;
 public:
-	lz77(cstream* s,size_t size = 128) : cstream(s), offset(-1), length(-1), next(-1), buf(size) {}
+	lz77(cstream* s, size_t size = 128) : cstream(s), offset(-1), length(-1), next(-1), buf(0) {
+		if (size > 255) {
+			size = 255;
+		}
+		buf = lz77_bufer(size);
+	}
 	
 	bool is_open() { return prev->is_open(); }
 	int get()
@@ -265,7 +306,7 @@ public:
 		length = 0;
 		next = 0;
 		
-		for (int kol = 0; kol < 128;++kol) {
+		for (int kol = 0; kol < 257;++kol) {
 		
 			buf.find(s, res);
 			if (res == -1) {
@@ -282,12 +323,13 @@ public:
 				offset = res;
 				length = s.size();
 
-				if (length == 127) {
+				if (length == 255) {
 					int tmp = offset;
 					next = prev->get();
 					for (int i = 0; i < s.size(); ++i) {
 						buf.push_back(s[i]);
 					}
+					buf.push_back(next);
 					offset = -1;
 					return tmp;
 				}
