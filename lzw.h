@@ -108,14 +108,16 @@ class bitsbuf {
 public:
 	bitsbuf() : buf(0), count(0) {}
 	int get_byte() {
-		if (count < 8) return -1;
-		unsigned int result = buf >> (count - 8);
-		buf -= result << (count - 8);
+		if (count < 8) {
+			count = 0;
+			int res = static_cast<int>(buf);
+			buf = 0;
+			return res;
+		}
 		count -= 8;
+		unsigned int result = (buf >> count);
+		buf -= (result << count);
 		return static_cast<int>(result);
-	}
-	int get() {
-		return static_cast<int>(buf);
 	}
 	void push(int x, int bitscount) {
 		buf <<= bitscount;
@@ -138,7 +140,7 @@ public:
 	int get() {
 		if (buffer.size() < 8) {
 			if (is_eof) {
-				return ((buffer.size() > 0) ? buffer.get() : EOF);
+				return ((buffer.size() > 0) ? buffer.get_byte() : EOF);
 			}
 			int res, ch;
 			do {
