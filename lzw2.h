@@ -108,16 +108,21 @@ class bitsbuf {
 public:
 	bitsbuf() : buf(0), count(0) {}
 	int get_byte() {
-		if (count < 8) {
-			count = 0;
-			int res = static_cast<int>(buf);
-			buf = 0;
-			return res;
+		if (count < 8)
+		{
+			buf <<= (8 - count);
+			count = 8;
 		}
+
+		unsigned int result = buf >> (count - 8);
+		buf -= result << (count - 8);
 		count -= 8;
-		unsigned int result = (buf >> count);
-		buf -= (result << count);
+		
 		return static_cast<int>(result);
+	}
+	int get ()
+	{
+		return static_cast<int>(buf);
 	}
 	void push(int x, int bitscount) {
 		buf <<= bitscount;
@@ -138,20 +143,16 @@ public:
 	LZW2(cstream* s, int bitscount = 12) : cstream(s), curbits(bitscount), table(bitscount), buffer(bitsbuf()), is_eof(false),shift(-1) {}
 	bool is_open() { return prev->is_open(); }
 	int get() {
-		if (buffer.size() < 8) {
-			if (is_eof) {
-				return ((buffer.size() > 0) ? buffer.get_byte() : EOF);
-			}
+
+		while (buffer.size() < 8 && !is_eof) {
+
 			int res, ch;
+
 			do {
 				ch = prev->get();
 				if (ch == EOF) {
 					is_eof = true;
-					if (shift == 0) {
-						++curbits;
-						--shift;
-					}
-					buffer.push(table.find(str), curbits);
+					break;
 				}
 				stroka str_ch = str + ch;
 				res = table.find(str_ch);
@@ -164,6 +165,7 @@ public:
 					str += ch;
 				}
 			} while (res != -1);
+
 			if (shift >= 0) {
 				if (shift == 0) {
 					++curbits;
@@ -173,6 +175,12 @@ public:
 			buffer.push(table.find(str), curbits);
 			str = stroka(ch);
 		}
+
+		if (is_eof && buffer.size() == 0)
+		{
+			return EOF;
+		}
+
 		return buffer.get_byte();
 	}
 };
